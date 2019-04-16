@@ -1,0 +1,15 @@
+server:
+  port: 8761
+spring:
+  application:
+    name: eoffice-qn-registry
+  
+eureka:
+  instance:
+    hostname: 192.168.1.11
+  client:
+    region: default
+    registerWithEureka: true
+    fetchRegistry: false
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
