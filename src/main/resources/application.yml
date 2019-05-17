@@ -3,13 +3,80 @@ server:
 spring:
   application:
     name: eoffice-qn-registry
-  
+  security:
+    user:
+        name: admin
+        password: admin
+        roles: USER,ADMIN,SYSTEM
+        
+management:
+    endpoints:
+      web:
+        base-path: /management
+        exposure:
+          include: ["configprops", "env", "health", "info", "threaddump", "logfile", "jhi-metrics", "prometheus" ]
+    endpoint:
+      health:
+        show-details: when-authorized
+    info:
+      git:
+        mode: full
+    health:
+      mail:
+        enabled: false # When using the MailService, configure an SMTP server and set this to true
+    metrics:
+      enable:
+        jvm: true
+        processor: true
+        uptime: true
+        logback: true
+        files: true
+        integration: true
+      export:
+          # Prometheus is the default metrics backend
+          prometheus:
+              enabled: true
+              step: 60
+      distribution:
+        percentiles-histogram:
+          all: true
+        percentiles:
+          all: 0, 0.5, 0.75, 0.95, 0.99, 1.0
+      web:
+        server:
+          auto-time-requests: true
+ 
 eureka:
+#  instance:
+#    hostname: localhost
+#  client:
+#    region: default
+#    registerWithEureka: false
+#    fetchRegistry: false
+#    serviceUrl:
+#      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
   instance:
-    hostname: localhost
+    appname: eoffice-qn-registry
+    instanceId: eoffice-qn-registry:${spring.application.instance-id:${random.value}}
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 10
+    status-page-url-path: ${management.endpoints.web.base-path}/info
+    health-check-url-path: ${management.endpoints.web.base-path}/health
+    metadata-map:
+      zone: primary # This is needed for the load balancer
+      profile: ${spring.profiles.active}
+      version: ${info.project.version}
   client:
-    region: default
-    registerWithEureka: true
-    fetchRegistry: false
-    serviceUrl:
-      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+      enabled: true
+      fetch-registry: false
+      register-with-eureka: false
+      instance-info-replication-interval-seconds: 10
+      registry-fetch-interval-seconds: 10
+      service-url:
+          defaultZone: http://admin:${spring.security.user.password:admin}@localhost:${server.port}/eureka/
+  server:
+      enable-self-preservation: false
+      peer-node-read-timeout-ms: 1000
+  dashboard:
+      path: /registry
